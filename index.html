@@ -291,17 +291,98 @@
                         </div>
                     </div>
 
-                    <!-- Date & Time with inline Now button -->
+                    <!-- Manually Editable Date & Time + Interactive Date & Time Picker -->
                     <div>
-                        <label for="inputDateTime" class="block text-[11px] font-medium text-slate-400 mb-1">Watermark Date & Time</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="inputDateTime" class="block text-[11px] font-medium text-slate-400">Watermark Date & Time</label>
+                            <button id="toggleDateTimePickerBtn" type="button"
+                                class="text-[11px] font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition">
+                                <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                                <span id="pickerToggleText">Open Date & Time Picker</span>
+                            </button>
+                        </div>
+
+                        <!-- Manual Editable Text Input + Calendar Toggle + Now Button -->
                         <div class="relative flex items-center">
                             <input id="inputDateTime" type="text" value="Oct 16, 2026 07:05"
-                                placeholder="Oct 16, 2026 13:27"
-                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl pl-3 pr-16 py-2 text-white outline-none transition">
-                            <button id="useNowBtn" type="button"
-                                class="absolute right-1.5 min-h-[30px] px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-sky-400 text-[11px] font-semibold transition whitespace-nowrap">
-                                Now
-                            </button>
+                                placeholder="Oct 16, 2026 07:05"
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl pl-3 pr-24 py-2 text-white font-medium outline-none transition">
+                            <div class="absolute right-1.5 flex items-center gap-1">
+                                <button id="openPickerInlineBtn" type="button" title="Open Calendar & Time Picker"
+                                    class="min-w-[32px] min-h-[30px] px-2 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-amber-400 flex items-center justify-center transition">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button id="useNowBtn" type="button" title="Set to current Date & Time"
+                                    class="min-h-[30px] px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-sky-400 text-[11px] font-semibold transition whitespace-nowrap">
+                                    Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Interactive In-App Date & Time Picker Panel (Works in all iframes & mobile/desktop browsers) -->
+                        <div id="customDateTimePickerPopover"
+                            class="hidden mt-2 p-3 rounded-xl bg-slate-950 border border-slate-800 shadow-2xl space-y-3">
+                            <!-- Month & Year Selector Header -->
+                            <div class="flex items-center justify-between gap-1.5">
+                                <button id="calPrevMonthBtn" type="button" title="Previous Month"
+                                    class="min-w-[32px] min-h-[32px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center justify-center transition">
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <div class="flex items-center gap-1.5 flex-1 justify-center">
+                                    <select id="calMonthSelect" aria-label="Select Month"
+                                        class="min-h-[32px] bg-slate-900 border border-slate-800 focus:border-amber-400 rounded-lg px-2 py-1 text-xs font-semibold text-white outline-none cursor-pointer">
+                                        <option value="0">Jan</option>
+                                        <option value="1">Feb</option>
+                                        <option value="2">Mar</option>
+                                        <option value="3">Apr</option>
+                                        <option value="4">May</option>
+                                        <option value="5">Jun</option>
+                                        <option value="6">Jul</option>
+                                        <option value="7">Aug</option>
+                                        <option value="8">Sep</option>
+                                        <option value="9">Oct</option>
+                                        <option value="10">Nov</option>
+                                        <option value="11">Dec</option>
+                                    </select>
+                                    <input id="calYearInput" type="number" min="2000" max="2099" value="2026" aria-label="Year"
+                                        class="w-20 min-h-[32px] bg-slate-900 border border-slate-800 focus:border-amber-400 rounded-lg px-2 py-1 text-xs font-mono font-semibold text-white text-center outline-none">
+                                </div>
+                                <button id="calNextMonthBtn" type="button" title="Next Month"
+                                    class="min-w-[32px] min-h-[32px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center justify-center transition">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- Day of Week Headers -->
+                            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-500 uppercase">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+
+                            <!-- Calendar Days Grid -->
+                            <div id="calDaysGrid" class="grid grid-cols-7 gap-1 text-center">
+                                <!-- Populated dynamically -->
+                            </div>
+
+                            <!-- 24-Hour Time Picker Row -->
+                            <div class="pt-2.5 border-t border-slate-800/90 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                    <span class="text-[11px] font-medium text-slate-400">Time (24h):</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <select id="calHourSelect" aria-label="Hour"
+                                        class="min-h-[32px] bg-slate-900 border border-slate-800 focus:border-amber-400 rounded-lg px-2 py-1 text-xs font-mono font-bold text-white outline-none cursor-pointer">
+                                    </select>
+                                    <span class="text-slate-400 font-mono font-bold">:</span>
+                                    <select id="calMinuteSelect" aria-label="Minute"
+                                        class="min-h-[32px] bg-slate-900 border border-slate-800 focus:border-amber-400 rounded-lg px-2 py-1 text-xs font-mono font-bold text-white outline-none cursor-pointer">
+                                    </select>
+                                </div>
+                                <button id="closeDateTimePickerBtn" type="button"
+                                    class="min-h-[32px] px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+                                    Done
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -526,6 +607,13 @@ Talo-Ot, Cebu, 6021, Central Visayas
         // Form Inputs
         const inputTitle = document.getElementById('inputTitle');
         const inputDateTime = document.getElementById('inputDateTime');
+        const customDateTimePickerPopover = document.getElementById('customDateTimePickerPopover');
+        const pickerToggleText = document.getElementById('pickerToggleText');
+        const calMonthSelect = document.getElementById('calMonthSelect');
+        const calYearInput = document.getElementById('calYearInput');
+        const calDaysGrid = document.getElementById('calDaysGrid');
+        const calHourSelect = document.getElementById('calHourSelect');
+        const calMinuteSelect = document.getElementById('calMinuteSelect');
         const inputBaseSeconds = document.getElementById('inputBaseSeconds');
         const inputAddress = document.getElementById('inputAddress');
         const inputAltitude = document.getElementById('inputAltitude');
@@ -601,6 +689,89 @@ Talo-Ot, Cebu, 6021, Central Visayas
             }
             const parsed = new Date(trimmed);
             return isNaN(parsed.getTime()) ? new Date() : parsed;
+        }
+
+        // Populate 24h Hour (00-23) and Minute (00-59) selects once
+        if (calHourSelect && calMinuteSelect) {
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = String(h);
+                opt.textContent = String(h).padStart(2, '0');
+                calHourSelect.appendChild(opt);
+            }
+            for (let m = 0; m < 60; m++) {
+                const opt = document.createElement('option');
+                opt.value = String(m);
+                opt.textContent = String(m).padStart(2, '0');
+                calMinuteSelect.appendChild(opt);
+            }
+        }
+
+        let pickerSelectedDate = parseWatermarkDate(DEFAULT_SETTINGS.dateTime);
+
+        // Render interactive calendar grid & time selects from a Timemark display string ("Oct 16, 2026 07:05")
+        function syncPickersFromDateTimeStr(dateStr) {
+            const dt = parseWatermarkDate(dateStr);
+            pickerSelectedDate = new Date(dt.getTime());
+
+            if (calMonthSelect) calMonthSelect.value = String(dt.getMonth());
+            if (calYearInput) calYearInput.value = String(dt.getFullYear());
+            if (calHourSelect) calHourSelect.value = String(dt.getHours());
+            if (calMinuteSelect) calMinuteSelect.value = String(dt.getMinutes());
+
+            renderCalendarDaysGrid();
+        }
+
+        function renderCalendarDaysGrid() {
+            if (!calDaysGrid) return;
+            const year = parseInt(calYearInput.value, 10) || pickerSelectedDate.getFullYear();
+            const month = parseInt(calMonthSelect.value, 10);
+            const selectedDay = pickerSelectedDate.getDate();
+
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            calDaysGrid.innerHTML = '';
+
+            // Leading empty cells
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'h-7';
+                calDaysGrid.appendChild(empty);
+            }
+
+            // Day buttons
+            for (let d = 1; d <= daysInMonth; d++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSelected = (d === selectedDay);
+                btn.className = isSelected
+                    ? 'h-7 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center shadow-sm transition'
+                    : 'h-7 rounded-lg bg-slate-900/70 hover:bg-slate-800 text-slate-200 text-xs flex items-center justify-center transition';
+                btn.textContent = String(d);
+                btn.addEventListener('click', () => {
+                    pickerSelectedDate.setFullYear(year);
+                    pickerSelectedDate.setMonth(month);
+                    pickerSelectedDate.setDate(d);
+                    applyPickerSelectionToInput();
+                });
+                calDaysGrid.appendChild(btn);
+            }
+        }
+
+        function applyPickerSelectionToInput() {
+            const year = parseInt(calYearInput.value, 10) || pickerSelectedDate.getFullYear();
+            const month = parseInt(calMonthSelect.value, 10);
+            const maxDay = new Date(year, month + 1, 0).getDate();
+            const day = Math.min(pickerSelectedDate.getDate(), maxDay);
+            const hours = parseInt(calHourSelect.value, 10) || 0;
+            const minutes = parseInt(calMinuteSelect.value, 10) || 0;
+
+            pickerSelectedDate = new Date(year, month, day, hours, minutes);
+            const formatted = formatTimemarkDisplayDate(pickerSelectedDate);
+            inputDateTime.value = formatted;
+            renderCalendarDaysGrid();
+            updateSettingsFromForm(inputDateTime);
         }
 
         // Parse watermark DateTime string + baseSeconds + photo index into uniform filename timestamp: YYYYMMDD_HHMMSS
@@ -738,6 +909,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
 
             inputTitle.value = s.title;
             inputDateTime.value = s.dateTime;
+            syncPickersFromDateTimeStr(s.dateTime);
             inputBaseSeconds.value = s.baseSeconds || "50";
             inputAddress.value = s.address;
             inputAltitude.value = s.altitude;
@@ -1476,14 +1648,69 @@ Talo-Ot, Cebu, 6021, Central Visayas
             inputAltitude, inputCoords, inputPhotoCode,
             toggleTopPills, inputScale, inputShadow
         ].forEach(el => {
-            el.addEventListener('input', () => updateSettingsFromForm(el));
-            el.addEventListener('change', () => updateSettingsFromForm(el));
+            el.addEventListener('input', () => {
+                if (el === inputDateTime) {
+                    syncPickersFromDateTimeStr(inputDateTime.value);
+                }
+                updateSettingsFromForm(el);
+            });
+            el.addEventListener('change', () => {
+                if (el === inputDateTime) {
+                    syncPickersFromDateTimeStr(inputDateTime.value);
+                }
+                updateSettingsFromForm(el);
+            });
+        });
+
+        // Toggle In-App Interactive Date & Time Picker Panel
+        function toggleDateTimePickerPanel(forceOpen) {
+            if (!customDateTimePickerPopover) return;
+            const willOpen = typeof forceOpen === 'boolean'
+                ? forceOpen
+                : customDateTimePickerPopover.classList.contains('hidden');
+            customDateTimePickerPopover.classList.toggle('hidden', !willOpen);
+            if (pickerToggleText) {
+                pickerToggleText.textContent = willOpen ? 'Hide Picker' : 'Open Date & Time Picker';
+            }
+            if (willOpen) {
+                syncPickersFromDateTimeStr(inputDateTime.value);
+            }
+        }
+
+        document.getElementById('toggleDateTimePickerBtn').addEventListener('click', () => toggleDateTimePickerPanel());
+        document.getElementById('openPickerInlineBtn').addEventListener('click', () => toggleDateTimePickerPanel());
+        document.getElementById('closeDateTimePickerBtn').addEventListener('click', () => toggleDateTimePickerPanel(false));
+
+        document.getElementById('calPrevMonthBtn').addEventListener('click', () => {
+            let m = parseInt(calMonthSelect.value, 10) - 1;
+            let y = parseInt(calYearInput.value, 10);
+            if (m < 0) { m = 11; y--; }
+            calMonthSelect.value = String(m);
+            calYearInput.value = String(y);
+            applyPickerSelectionToInput();
+        });
+
+        document.getElementById('calNextMonthBtn').addEventListener('click', () => {
+            let m = parseInt(calMonthSelect.value, 10) + 1;
+            let y = parseInt(calYearInput.value, 10);
+            if (m > 11) { m = 0; y++; }
+            calMonthSelect.value = String(m);
+            calYearInput.value = String(y);
+            applyPickerSelectionToInput();
+        });
+
+        [calMonthSelect, calYearInput, calHourSelect, calMinuteSelect].forEach(ctrl => {
+            if (!ctrl) return;
+            ctrl.addEventListener('change', applyPickerSelectionToInput);
+            ctrl.addEventListener('input', applyPickerSelectionToInput);
         });
 
         // Set Current Date & Time + Seconds
         document.getElementById('useNowBtn').addEventListener('click', () => {
             const now = new Date();
-            inputDateTime.value = formatTimemarkDisplayDate(now);
+            const formatted = formatTimemarkDisplayDate(now);
+            inputDateTime.value = formatted;
+            syncPickersFromDateTimeStr(formatted);
             inputBaseSeconds.value = String(now.getSeconds()).padStart(2, '0');
             updateSettingsFromForm(inputDateTime);
             updateSettingsFromForm(inputBaseSeconds);
