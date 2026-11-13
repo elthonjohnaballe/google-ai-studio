@@ -3,32 +3,39 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#090d16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Timemark Batch Watermark Studio</title>
+    <meta name="description" content="Auto Photo Code & Sequential Batch Watermark Exporter for field inspection and verification photos.">
+    <meta property="og:title" content="Timemark Batch Watermark Studio">
+    <meta property="og:description" content="Auto Photo Code & Sequential Batch Watermark Exporter for field inspection and verification photos.">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Roboto & Roboto Condensed for authentic Timemark typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
         rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #090d16;
             color: #f8fafc;
             overscroll-behavior-y: contain;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
 
         ::-webkit-scrollbar-track {
@@ -44,24 +51,52 @@
             background: #475569;
         }
 
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         .canvas-bg {
             background-color: #090d16;
             background-image: radial-gradient(#1e293b 1px, transparent 1px);
             background-size: 14px 14px;
         }
 
-        /* Smooth mobile input focus without zoom on iOS */
+        /* Prevent iOS Safari auto-zoom on input focus */
         input[type="text"],
+        input[type="number"],
         textarea {
             font-size: 16px !important;
         }
 
         @media (min-width: 1024px) {
-
             input[type="text"],
+            input[type="number"],
             textarea {
                 font-size: 14px !important;
             }
+        }
+
+        /* Touch-friendly range sliders on mobile */
+        input[type="range"] {
+            height: 8px;
+            border-radius: 999px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Safe area padding for notched phones */
+        .pb-safe {
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
         }
     </style>
 </head>
@@ -70,40 +105,56 @@
 
     <!-- Compact Mobile-First Header -->
     <header
-        class="h-14 bg-slate-900 border-b border-slate-800 px-3 sm:px-5 flex items-center justify-between shrink-0 z-20">
-        <div class="flex items-center gap-2.5">
+        class="h-12 sm:h-14 bg-slate-900 border-b border-slate-800 px-3 sm:px-5 flex items-center justify-between gap-4 shrink-0 z-20">
+        <!-- Zone 1: Single-line Brand Title -->
+        <div class="flex items-center gap-2 shrink-0">
             <div
-                class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <i data-lucide="stamp" class="w-5 h-5"></i>
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <i data-lucide="stamp" class="w-4 h-4 sm:w-5 sm:h-5"></i>
             </div>
-            <div class="leading-tight">
-                <h1 class="text-base sm:text-lg font-bold tracking-tight flex items-center gap-1">
-                    <span class="text-amber-400">Time</span><span>Mark</span>
-                </h1>
-                <p class="text-[11px] text-slate-400 hidden sm:block">Auto Photo Code & Sequential Batch Exporter</p>
-            </div>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight whitespace-nowrap shrink-0">
+                <span class="text-amber-400">Time</span><span>Mark</span>
+            </h1>
         </div>
 
-        <!-- Primary Action Buttons -->
-        <div class="flex items-center gap-1.5 sm:gap-2.5">
-            <label for="fileInput"
-                class="cursor-pointer bg-slate-800 active:bg-slate-700 hover:bg-slate-700 text-slate-100 border border-slate-700 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm">
-                <i data-lucide="image-plus" class="w-4 h-4 text-sky-400"></i>
-                <span>Upload</span>
-                <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
-            </label>
+        <!-- Hidden file inputs for Gallery & Mobile Camera -->
+        <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
+        <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden">
 
-            <button id="downloadCurrentBtn"
-                class="bg-slate-800 active:bg-slate-700 hover:bg-slate-700 text-slate-100 border border-slate-700 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition"
-                title="Save Current Photo">
-                <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
-                <span class="hidden md:inline">Save Single</span>
+        <!-- Zone 2: Mobile Quick Preview Mode Toggle / Desktop Action Bar -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <!-- Mobile Keyboard Done / Restore Preview Button (shown automatically when typing on phone) -->
+            <button id="doneEditingMobileBtn" type="button"
+                class="hidden lg:hidden min-h-[38px] bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-bold items-center gap-1.5 whitespace-nowrap shrink-0 shadow-sm">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Done Editing</span>
             </button>
 
-            <button id="exportAllPhotosBtn"
-                class="bg-amber-500 active:bg-amber-600 hover:bg-amber-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition">
+            <!-- Mobile View Size Switcher -->
+            <button id="togglePreviewHeightBtn" type="button"
+                class="lg:hidden min-h-[38px] bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span id="previewSizeLabel">Large Preview</span>
+            </button>
+
+            <!-- Desktop Action Buttons (on Mobile these live in the ergonomic Bottom Thumb Bar) -->
+            <label for="fileInput"
+                class="hidden lg:flex cursor-pointer min-h-[40px] bg-slate-800 active:bg-slate-700 hover:bg-slate-700 text-slate-100 border border-slate-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold items-center gap-1.5 transition shadow-sm whitespace-nowrap shrink-0">
+                <i data-lucide="image-plus" class="w-4 h-4 text-sky-400"></i>
+                <span>Upload Photos</span>
+            </label>
+
+            <button id="downloadCurrentBtn" type="button"
+                class="hidden lg:flex min-h-[40px] bg-slate-800 active:bg-slate-700 hover:bg-slate-700 text-slate-100 border border-slate-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold items-center gap-1.5 transition whitespace-nowrap shrink-0"
+                title="Save Current Photo">
+                <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
+                <span>Save Single</span>
+            </button>
+
+            <button id="exportAllPhotosBtn" type="button"
+                class="hidden lg:flex min-h-[40px] bg-amber-500 active:bg-amber-600 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold items-center gap-1.5 shadow-lg shadow-amber-500/20 transition whitespace-nowrap shrink-0">
                 <i data-lucide="images" class="w-4 h-4"></i>
-                <span>Export All (<span id="batchCountBadge">1</span>)</span>
+                <span>Export All (<span id="batchCountBadge" class="tabular-nums">1</span>)</span>
             </button>
         </div>
     </header>
@@ -122,66 +173,87 @@
 
         <!-- PREVIEW & FILMSTRIP PANEL -->
         <div id="previewPanel"
-            class="h-[42dvh] lg:h-auto lg:flex-1 flex flex-col bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 transition-all duration-200">
+            class="h-[36dvh] sm:h-[42dvh] lg:h-auto lg:flex-1 flex flex-col bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 transition-all duration-200">
 
             <!-- Live Filename Preview Bar -->
             <div
-                class="bg-slate-900/90 border-b border-slate-800/80 px-3 py-1.5 flex items-center justify-between gap-2 text-[11px] shrink-0">
+                class="bg-slate-900/90 border-b border-slate-800/80 px-3 py-1 flex items-center justify-between gap-2 text-[11px] shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span
-                        class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/30 shrink-0">FILENAME</span>
+                    <span class="text-emerald-400 font-semibold shrink-0">File ·</span>
                     <span id="liveFilenamePreview" class="font-mono text-slate-200 truncate"
                         title="Standardized Output Filename">20261016_070500_Central Elementary
                         School_Title-PTCEGO006.jpg</span>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <span id="activeResolution" class="text-slate-500 hidden sm:inline">(960×1280)</span>
-                    <button id="togglePreviewHeightBtn"
-                        class="lg:hidden bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 text-[10px] font-medium flex items-center gap-1">
-                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
-                        <span id="previewSizeLabel">Expand</span>
+                    <span id="activeResolution" class="text-slate-400 tabular-nums hidden sm:inline">(960×1280)</span>
+                    <button id="copyFilenameBtn" type="button"
+                        class="min-h-[28px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 border border-slate-700 text-[10px] font-medium flex items-center gap-1 whitespace-nowrap shrink-0"
+                        title="Copy Output Filename">
+                        <i data-lucide="copy" class="w-3 h-3 text-amber-400"></i>
+                        <span>Copy Name</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Interactive Canvas Viewport -->
+            <!-- Interactive Canvas Viewport (Supports Touch Swipe Left/Right & Tap to Zoom) -->
             <div id="canvasContainer"
-                class="flex-1 canvas-bg flex items-center justify-center p-2 sm:p-4 overflow-hidden relative">
+                class="flex-1 canvas-bg flex items-center justify-center p-1.5 sm:p-4 overflow-hidden relative">
                 <canvas id="previewCanvas"
-                    class="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-slate-800/80"></canvas>
+                    class="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-slate-800/80 cursor-zoom-in"></canvas>
 
-                <!-- Floating Quick Share Button on Mobile if supported -->
-                <button id="mobileShareBtn"
-                    class="hidden absolute bottom-2.5 right-2.5 bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-md">
+                <!-- On-Canvas Prev / Next Photo Touch Buttons (Visible when batch > 1) -->
+                <button id="prevPhotoBtn" type="button"
+                    class="hidden absolute left-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] rounded-full bg-slate-900/85 active:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg backdrop-blur-md transition active:scale-95"
+                    aria-label="Previous Photo">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                <button id="nextPhotoBtn" type="button"
+                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] rounded-full bg-slate-900/85 active:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg backdrop-blur-md transition active:scale-95"
+                    aria-label="Next Photo">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Bottom-Left Fullscreen Zoom Button -->
+                <button id="openZoomModalBtn" type="button"
+                    class="absolute bottom-2 left-2 min-h-[36px] bg-slate-900/85 active:bg-slate-800 hover:bg-slate-800 text-slate-200 border border-slate-700/80 px-2.5 py-1 rounded-xl text-[11px] font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-md whitespace-nowrap">
+                    <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span>Inspect HD</span>
+                </button>
+
+                <!-- Floating Quick Share Button on Desktop/Tablet if supported -->
+                <button id="mobileShareBtn" type="button"
+                    class="hidden absolute bottom-2 right-2 min-h-[36px] bg-slate-900/90 active:bg-slate-800 hover:bg-slate-800 text-white border border-slate-700 px-3 py-1 rounded-xl text-[11px] font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-md whitespace-nowrap">
                     <i data-lucide="share-2" class="w-3.5 h-3.5 text-amber-400"></i>
                     <span>Share / Save to Phone</span>
                 </button>
             </div>
 
             <!-- Swipeable Thumbnail Filmstrip -->
-            <div
-                class="h-20 sm:h-24 bg-slate-900 border-t border-slate-800 px-3 py-1.5 flex flex-col justify-center shrink-0">
-                <div class="flex items-center justify-between mb-1">
+            <div id="filmstripBar"
+                class="h-[76px] sm:h-24 bg-slate-900 border-t border-slate-800 px-3 py-1 flex flex-col justify-center shrink-0">
+                <div class="flex items-center justify-between mb-1 gap-2">
                     <span
-                        class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                        <i data-lucide="layers" class="w-3 h-3 text-amber-400"></i>
-                        Photo Queue (<span id="queueCounterText">1/1</span>)
+                        class="text-[11px] font-semibold text-slate-300 flex items-center gap-1 whitespace-nowrap shrink-0">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>Queue</span>
+                        <span aria-hidden="true">·</span>
+                        <span id="queueCounterText" class="tabular-nums text-amber-400">1/1</span>
                     </span>
-                    <div class="flex items-center gap-2.5">
-                        <button id="regenerateAllCodesBtn"
-                            class="text-[11px] text-emerald-400 active:text-emerald-300 flex items-center gap-1 font-medium">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar">
+                        <button id="regenerateAllCodesBtn" type="button"
+                            class="min-h-[28px] px-2 py-0.5 rounded-lg bg-slate-800/90 active:bg-slate-700 text-[11px] text-emerald-400 flex items-center gap-1 font-medium whitespace-nowrap shrink-0 border border-slate-700/70">
                             <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                            New Codes
+                            <span>New Codes</span>
                         </button>
-                        <button id="staggerMinutesBtn"
-                            class="text-[11px] text-sky-400 active:text-sky-300 flex items-center gap-1 font-medium">
+                        <button id="staggerMinutesBtn" type="button"
+                            class="min-h-[28px] px-2 py-0.5 rounded-lg bg-slate-800/90 active:bg-slate-700 text-[11px] text-sky-400 flex items-center gap-1 font-medium whitespace-nowrap shrink-0 border border-slate-700/70">
                             <i data-lucide="clock" class="w-3 h-3"></i>
-                            +1m Times
+                            <span>+1m Times</span>
                         </button>
-                        <button id="clearQueueBtn"
-                            class="text-[11px] text-rose-400 active:text-rose-300 flex items-center gap-1 font-medium">
+                        <button id="clearQueueBtn" type="button"
+                            class="min-h-[28px] px-2 py-0.5 rounded-lg bg-slate-800/90 active:bg-slate-700 text-[11px] text-rose-400 flex items-center gap-1 font-medium whitespace-nowrap shrink-0 border border-slate-700/70">
                             <i data-lucide="trash-2" class="w-3 h-3"></i>
-                            Reset
+                            <span>Reset</span>
                         </button>
                     </div>
                 </div>
@@ -192,235 +264,227 @@
         </div>
 
         <!-- CONTROLS & METADATA EDITOR PANEL -->
-        <aside class="flex-1 lg:w-[410px] lg:flex-none bg-slate-900 flex flex-col overflow-hidden">
+        <aside class="flex-1 lg:w-[420px] lg:flex-none bg-slate-900/95 flex flex-col overflow-hidden">
 
-            <!-- Sticky Sub-Header with Sync All Button -->
-            <div
-                class="px-3.5 py-2.5 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="sliders-horizontal" class="w-4 h-4 text-amber-400"></i>
-                    <span class="text-xs sm:text-sm font-bold text-slate-200">Watermark Input & Settings</span>
-                </div>
-                <button id="applyToAllBtn"
-                    class="text-xs bg-amber-500/20 active:bg-amber-500/30 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm">
-                    <i data-lucide="copy-check" class="w-3.5 h-3.5"></i>
-                    <span>Apply Info to All Photos</span>
-                </button>
-            </div>
+            <!-- Streamlined Scrollable Settings Panel (No redundant sub-header or tab clutter) -->
+            <div id="formScrollContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/80 pb-24 lg:pb-10">
 
-            <!-- Scrollable Mobile-Friendly Form -->
-            <div class="flex-1 overflow-y-auto p-3.5 space-y-4 pb-16">
-
-                <!-- Card 1: Primary Bottom-Left Information -->
-                <div class="space-y-3 bg-slate-800/45 p-3.5 rounded-2xl border border-slate-800">
+                <!-- Section 1: Title, Date & Location -->
+                <section class="p-4 space-y-3">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                            <i data-lucide="tag" class="w-3.5 h-3.5"></i>
-                            1. Title, Date & Location
-                        </h3>
-                        <span
-                            class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700">Auto-Syncs
-                            on Edit</span>
+                        <h2 class="text-xs font-semibold tracking-tight text-slate-200">01. Title, Date & Location</h2>
+                        <span class="text-[11px] text-slate-500">Auto-syncs batch</span>
                     </div>
 
-                    <!-- Title / Equipment Code -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Title / Equipment Code</label>
-                        <input id="inputTitle" type="text" value="PTCEGO006" placeholder="e.g. PTCEGO192"
-                            class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-semibold outline-none transition">
-                    </div>
-
-                    <!-- Date & Time + Seconds Base -->
-                    <div class="grid grid-cols-12 gap-2">
+                    <!-- Title & Starting Seconds Row -->
+                    <div class="grid grid-cols-12 gap-2.5">
                         <div class="col-span-8">
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="block text-xs font-medium text-slate-300">Watermark Date & Time</label>
-                                <button id="useNowBtn" type="button"
-                                    class="text-[11px] text-sky-400 font-medium hover:underline">Set Now</button>
-                            </div>
-                            <input id="inputDateTime" type="text" value="Oct 16, 2026 07:05"
-                                placeholder="Oct 16, 2026 13:27"
-                                class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none transition">
+                            <label for="inputTitle" class="block text-[11px] font-medium text-slate-400 mb-1">Title / Equipment Code</label>
+                            <input id="inputTitle" type="text" value="PTCEGO006" placeholder="e.g. PTCEGO192"
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-semibold outline-none transition">
                         </div>
                         <div class="col-span-4">
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="block text-xs font-medium text-slate-300"
-                                    title="Starting seconds for filename YYYYMMDD_HHMMSS">File Sec</label>
-                                <span class="text-[10px] text-emerald-400 font-mono">+1/pic</span>
-                            </div>
-                            <input id="inputBaseSeconds" type="text" value="50" maxlength="2" placeholder="18"
-                                class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-2.5 py-2 text-white font-mono text-center outline-none transition">
+                            <label for="inputBaseSeconds" class="block text-[11px] font-medium text-slate-400 mb-1"
+                                title="Starting seconds for filename YYYYMMDD_HHMMSS">Start Sec <span class="text-emerald-400 font-mono">+1s</span></label>
+                            <input id="inputBaseSeconds" type="text" inputmode="numeric" value="50" maxlength="2" placeholder="18"
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl px-2.5 py-2 text-white font-mono tabular-nums text-center outline-none transition">
+                        </div>
+                    </div>
+
+                    <!-- Date & Time with inline Now button -->
+                    <div>
+                        <label for="inputDateTime" class="block text-[11px] font-medium text-slate-400 mb-1">Watermark Date & Time</label>
+                        <div class="relative flex items-center">
+                            <input id="inputDateTime" type="text" value="Oct 16, 2026 07:05"
+                                placeholder="Oct 16, 2026 13:27"
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl pl-3 pr-16 py-2 text-white outline-none transition">
+                            <button id="useNowBtn" type="button"
+                                class="absolute right-1.5 min-h-[30px] px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-sky-400 text-[11px] font-semibold transition whitespace-nowrap">
+                                Now
+                            </button>
                         </div>
                     </div>
 
                     <!-- Location / Address Lines -->
                     <div>
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-medium text-slate-300">Location / Address
-                                (Multiline)</label>
-                            <span class="text-[10px] text-slate-400">1st phrase used in filename</span>
+                            <label for="inputAddress" class="block text-[11px] font-medium text-slate-400">Location / Address</label>
+                            <span class="text-[11px] text-slate-500">1st phrase in filename</span>
                         </div>
                         <textarea id="inputAddress" rows="3"
-                            class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none transition leading-snug">Central Elementary School, Argao, Taloot,
+                            class="w-full bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none transition leading-snug">Central Elementary School, Argao, Taloot,
 Talo-Ot, Cebu, 6021, Central Visayas
 (Region VII)</textarea>
                     </div>
-                </div>
+                </section>
 
-                <!-- Card 2: Top-Left Altitude & GPS Pills -->
-                <div class="space-y-3 bg-slate-800/45 p-3.5 rounded-2xl border border-slate-800">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-                            2. Top Altitude & GPS Pills
-                        </h3>
-                        <input id="toggleTopPills" type="checkbox" checked
-                            class="accent-amber-400 w-4 h-4 rounded cursor-pointer">
+                <!-- Section 2: Top Altitude & GPS Coordinates -->
+                <section class="p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input id="toggleTopPills" type="checkbox" checked
+                                class="accent-amber-400 w-4 h-4 rounded cursor-pointer">
+                            <span class="text-xs font-semibold tracking-tight text-slate-200">02. Altitude & GPS Overlay</span>
+                        </label>
+                        <button id="useGpsBtn" type="button"
+                            class="min-h-[30px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-sky-400 text-[11px] font-medium flex items-center gap-1 transition whitespace-nowrap">
+                            <i data-lucide="locate-fixed" class="w-3 h-3"></i>
+                            <span>Phone GPS</span>
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-12 gap-2.5">
                         <div class="col-span-4">
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Altitude</label>
+                            <label for="inputAltitude" class="block text-[11px] font-medium text-slate-400 mb-1">Altitude</label>
                             <input id="inputAltitude" type="text" value="79.1 m" placeholder="79.1 m"
-                                class="w-full bg-slate-950 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-2 text-white outline-none transition">
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-sky-400 rounded-xl px-2.5 py-2 text-white outline-none transition">
                         </div>
                         <div class="col-span-8">
-                            <label class="block text-xs font-medium text-slate-300 mb-1">GPS Coordinates</label>
+                            <label for="inputCoords" class="block text-[11px] font-medium text-slate-400 mb-1">GPS Coordinates</label>
                             <input id="inputCoords" type="text" value="9.955341°N, 123.617605°E"
                                 placeholder="9.955341°N, 123.617605°E"
-                                class="w-full bg-slate-950 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-2 text-white outline-none transition">
+                                class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-sky-400 rounded-xl px-2.5 py-2 text-white outline-none transition">
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Card 3: Photo Code & Verification (All Checked by Default) -->
-                <div class="space-y-3 bg-slate-800/45 p-3.5 rounded-2xl border border-slate-800">
+                <!-- Section 3: Photo Code & Verification -->
+                <section class="p-4 space-y-3">
                     <div class="flex items-center justify-between">
-                        <h3
-                            class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                            3. Photo Code & Verification
-                        </h3>
-                        <span
-                            class="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium">Auto-Generated</span>
+                        <h2 class="text-xs font-semibold tracking-tight text-slate-200">03. Photo Code & Verification</h2>
+                        <span class="text-[11px] text-emerald-400">14-char unique</span>
                     </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-medium text-slate-300">Current Photo's 14-Char Code</label>
-                            <button id="generateCodeBtn" type="button"
-                                class="text-xs text-emerald-400 font-medium hover:underline flex items-center gap-1">
-                                <i data-lucide="dices" class="w-3.5 h-3.5"></i> Randomize This Photo
-                            </button>
-                        </div>
-                        <input id="inputPhotoCode" type="text" value="PBB3MMMP6P3W6X"
-                            class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-white font-mono outline-none transition uppercase tracking-wider">
+                    <div class="relative flex items-center">
+                        <input id="inputPhotoCode" type="text" value="PBB3MMMP6P3W6X" aria-label="14-Character Photo Code"
+                            class="w-full min-h-[42px] bg-slate-950 border border-slate-800 focus:border-emerald-400 rounded-xl pl-3 pr-11 py-2 text-white font-mono outline-none transition uppercase tracking-wider">
+                        <button id="generateCodeBtn" type="button" title="Randomize Photo Code"
+                            class="absolute right-1.5 min-w-[32px] min-h-[32px] rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-emerald-400 flex items-center justify-center transition">
+                            <i data-lucide="dices" class="w-4 h-4"></i>
+                        </button>
                     </div>
+                </section>
 
-                    <!-- All Verification Checkboxes Ticked by Default -->
-                    <div class="space-y-2.5 pt-1 border-t border-slate-700/60">
-                        <label class="flex items-center justify-between text-xs text-slate-200 cursor-pointer py-0.5">
-                            <span class="flex items-center gap-2">
-                                <i data-lucide="check-square" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                Auto-Generate Unique Code on Upload
-                            </span>
-                            <input id="toggleAutoUniqueCode" type="checkbox" checked
-                                class="accent-amber-400 w-4 h-4 rounded">
-                        </label>
-
-                        <label class="flex items-center justify-between text-xs text-slate-200 cursor-pointer py-0.5">
-                            <span class="flex items-center gap-2">
-                                <i data-lucide="file-digit" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                Auto-Increment Filename Timestamp (+1s)
-                            </span>
-                            <input id="toggleAutoIncrementFilename" type="checkbox" checked
-                                class="accent-amber-400 w-4 h-4 rounded">
-                        </label>
-
-                        <label class="flex items-center justify-between text-xs text-slate-200 cursor-pointer py-0.5">
-                            <span>Show Bottom Shield & Photo Code</span>
-                            <input id="toggleBottomCode" type="checkbox" checked
-                                class="accent-amber-400 w-4 h-4 rounded">
-                        </label>
-
-                        <label class="flex items-center justify-between text-xs text-slate-200 cursor-pointer py-0.5">
-                            <span>Show Right Vertical "Timemark Verified"</span>
-                            <input id="toggleRightVertical" type="checkbox" checked
-                                class="accent-amber-400 w-4 h-4 rounded">
-                        </label>
-
-                        <label class="flex items-center justify-between text-xs text-slate-200 cursor-pointer py-0.5">
-                            <span>Show Bottom-Right "Photo by Timemark"</span>
-                            <input id="toggleLogo" type="checkbox" checked class="accent-amber-400 w-4 h-4 rounded">
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Card 4: Scale & Appearance -->
-                <div class="space-y-3 bg-slate-800/45 p-3.5 rounded-2xl border border-slate-800">
+                <!-- Section 4: Appearance & Export Compression -->
+                <section class="p-4 space-y-3.5">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                            <i data-lucide="scaling" class="w-3.5 h-3.5"></i>
-                            4. Size & Contrast Adjustment
-                        </h3>
-                        <button id="resetScaleBtn" class="text-xs text-amber-400 hover:underline">Reset 100%</button>
+                        <h2 class="text-xs font-semibold tracking-tight text-slate-200">04. Scale, Contrast & Export</h2>
+                        <button id="resetScaleBtn" type="button"
+                            class="text-[11px] text-amber-400 hover:underline font-medium">
+                            Reset 100%
+                        </button>
                     </div>
 
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-slate-300">Watermark Size Scale</span>
-                            <span id="scaleValueLabel" class="text-amber-400 font-mono">100%</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between text-[11px] mb-1.5">
+                                <span class="text-slate-400">Size Scale</span>
+                                <span id="scaleValueLabel" class="text-amber-400 font-mono tabular-nums">100%</span>
+                            </div>
+                            <input id="inputScale" type="range" min="70" max="135" value="100"
+                                class="w-full accent-amber-400 bg-slate-800 rounded-lg cursor-pointer">
                         </div>
-                        <input id="inputScale" type="range" min="70" max="135" value="100"
-                            class="w-full accent-amber-400 h-2 bg-slate-700 rounded-lg cursor-pointer">
-                    </div>
 
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-slate-300">Text Drop Shadow</span>
-                            <span id="shadowValueLabel" class="text-amber-400 font-mono">50%</span>
+                        <div>
+                            <div class="flex justify-between text-[11px] mb-1.5">
+                                <span class="text-slate-400">Text Shadow</span>
+                                <span id="shadowValueLabel" class="text-amber-400 font-mono tabular-nums">50%</span>
+                            </div>
+                            <input id="inputShadow" type="range" min="0" max="100" value="50"
+                                class="w-full accent-amber-400 bg-slate-800 rounded-lg cursor-pointer">
                         </div>
-                        <input id="inputShadow" type="range" min="0" max="100" value="50"
-                            class="w-full accent-amber-400 h-2 bg-slate-700 rounded-lg cursor-pointer">
                     </div>
-                </div>
 
-                <!-- Card 5: Export Compression Settings -->
-                <div class="space-y-3 bg-slate-800/45 p-3.5 rounded-2xl border border-slate-800">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
-                            <i data-lucide="hard-drive-download" class="w-3.5 h-3.5"></i>
-                            5. Export Compression (Google Forms)
-                        </h3>
+                    <label class="flex items-center justify-between min-h-[42px] pt-2 border-t border-slate-800/80 text-xs text-slate-200 cursor-pointer">
+                        <div>
+                            <span class="font-medium block">Compress Export ≤ 900 KB</span>
+                            <span class="text-[11px] text-slate-500">Auto-optimizes size for Google Forms</span>
+                        </div>
                         <input id="toggleCompression" type="checkbox" checked
-                            class="accent-amber-400 w-4 h-4 rounded cursor-pointer">
-                    </div>
-
-                    <div class="space-y-2.5">
-                        <div
-                            class="flex items-center justify-between text-xs text-slate-200 bg-slate-900/60 rounded-xl px-3 py-2 border border-slate-700/60">
-                            <span class="flex items-center gap-2">
-                                <i data-lucide="file-down" class="w-3.5 h-3.5 text-rose-400"></i>
-                                Max File Size per Photo
-                            </span>
-                            <span class="text-amber-400 font-mono font-semibold">≤ 900 KB</span>
-                        </div>
-
-                        <p class="text-[10px] text-slate-500 leading-snug px-1">
-                            When enabled, exported images are automatically compressed to fit under 900 KB.
-                            Quality is reduced first; if still too large, resolution is scaled down. Ideal for Google
-                            Forms uploads.
-                        </p>
-                    </div>
-                </div>
+                            class="accent-amber-400 w-4 h-4 rounded cursor-pointer shrink-0">
+                    </label>
+                </section>
 
             </div>
         </aside>
     </div>
 
+    <!-- Mobile Thumb-Zone Bottom Action Bar (lg:hidden) -->
+    <nav aria-label="Mobile Primary Actions"
+        class="lg:hidden bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2.5 pt-2 pb-safe shrink-0 z-30">
+        <div class="grid grid-cols-12 gap-1.5 items-center">
+            <!-- Add from Gallery -->
+            <label for="fileInput"
+                class="col-span-3 min-h-[46px] cursor-pointer bg-slate-800 active:bg-slate-700 text-slate-100 border border-slate-700 rounded-xl px-2 py-1.5 flex flex-col items-center justify-center gap-0.5 transition active:scale-95">
+                <i data-lucide="image-plus" class="w-4 h-4 text-sky-400"></i>
+                <span class="text-[10px] font-semibold whitespace-nowrap">Add Photos</span>
+            </label>
+
+            <!-- Snap with Phone Camera -->
+            <label for="cameraInput"
+                class="col-span-2 min-h-[46px] cursor-pointer bg-slate-800 active:bg-slate-700 text-slate-100 border border-slate-700 rounded-xl px-1.5 py-1.5 flex flex-col items-center justify-center gap-0.5 transition active:scale-95"
+                title="Take Photo with Camera">
+                <i data-lucide="camera" class="w-4 h-4 text-amber-400"></i>
+                <span class="text-[10px] font-semibold whitespace-nowrap">Camera</span>
+            </label>
+
+            <!-- Save / Share Single Photo -->
+            <button id="mobileBottomSaveSingleBtn" type="button"
+                class="col-span-3 min-h-[46px] bg-slate-800 active:bg-slate-700 text-slate-100 border border-slate-700 rounded-xl px-2 py-1.5 flex flex-col items-center justify-center gap-0.5 transition active:scale-95">
+                <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
+                <span class="text-[10px] font-semibold whitespace-nowrap">Save 1</span>
+            </button>
+
+            <!-- Export All Batch CTA -->
+            <button id="mobileBottomExportAllBtn" type="button"
+                class="col-span-4 min-h-[46px] bg-amber-500 active:bg-amber-600 text-slate-950 rounded-xl px-2.5 py-1.5 font-bold flex flex-col items-center justify-center gap-0.5 shadow-lg shadow-amber-500/20 transition active:scale-95">
+                <div class="flex items-center gap-1">
+                    <i data-lucide="images" class="w-4 h-4"></i>
+                    <span class="text-xs font-bold whitespace-nowrap">Export (<span id="mobileBatchCountBadge" class="tabular-nums">1</span>)</span>
+                </div>
+                <span id="mobileExportSubtext" class="text-[9px] font-semibold opacity-80 whitespace-nowrap">All Photos</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Fullscreen High-Res Zoom & Pan Inspector Modal -->
+    <div id="zoomModal"
+        class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col select-none">
+        <div class="h-14 px-4 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/90">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs sm:text-sm font-bold text-white truncate">HD Watermark Inspector</span>
+                <span aria-hidden="true" class="text-slate-600">·</span>
+                <span id="zoomModalCounter" class="text-xs text-amber-400 font-mono tabular-nums">1/1</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="toggleZoomLevelBtn" type="button"
+                    class="min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap">
+                    <i data-lucide="zoom-in" class="w-4 h-4 text-amber-400"></i>
+                    <span id="zoomLevelText">2× Zoom</span>
+                </button>
+                <button id="closeZoomModalBtn" type="button"
+                    class="min-w-[42px] min-h-[38px] rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <div id="zoomViewport" class="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-6">
+            <img id="zoomModalImg" alt="High resolution watermarked preview" referrerpolicy="no-referrer"
+                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-150" />
+        </div>
+        <div class="h-14 px-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between pb-safe shrink-0">
+            <span class="text-xs text-slate-400">Tip: Scroll or drag when zoomed in to inspect Photo Code & GPS</span>
+            <button id="zoomModalShareBtn" type="button"
+                class="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Save This Photo</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Status Toast Message -->
     <div id="toast"
-        class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs sm:text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 z-50 backdrop-blur-md">
+        class="fixed bottom-20 lg:bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs sm:text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 z-50 backdrop-blur-md">
         <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
         <span id="toastMsg" class="truncate max-w-[80vw]">Saved!</span>
     </div>
@@ -468,13 +532,8 @@ Talo-Ot, Cebu, 6021, Central Visayas
         const inputCoords = document.getElementById('inputCoords');
         const inputPhotoCode = document.getElementById('inputPhotoCode');
 
-        // Checkboxes (All checked by default)
+        // Checkboxes
         const toggleTopPills = document.getElementById('toggleTopPills');
-        const toggleAutoUniqueCode = document.getElementById('toggleAutoUniqueCode');
-        const toggleAutoIncrementFilename = document.getElementById('toggleAutoIncrementFilename');
-        const toggleBottomCode = document.getElementById('toggleBottomCode');
-        const toggleRightVertical = document.getElementById('toggleRightVertical');
-        const toggleLogo = document.getElementById('toggleLogo');
 
         const inputScale = document.getElementById('inputScale');
         const inputShadow = document.getElementById('inputShadow');
@@ -520,15 +579,36 @@ Talo-Ot, Cebu, 6021, Central Visayas
             return `${m} ${d}, ${y} ${hr}:${min}`;
         }
 
+        // Resilient cross-browser parser for Timemark display date ("Oct 16, 2026 07:05")
+        function parseWatermarkDate(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return new Date();
+            const trimmed = dateStr.trim();
+            const monthsMap = {
+                jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+                jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+            };
+            const match = trimmed.match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2}),?\s+(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            if (match) {
+                const mIdx = monthsMap[match[1].toLowerCase()];
+                if (mIdx !== undefined) {
+                    const day = parseInt(match[2], 10);
+                    const year = parseInt(match[3], 10);
+                    const hr = parseInt(match[4], 10);
+                    const min = parseInt(match[5], 10);
+                    const sec = match[6] ? parseInt(match[6], 10) : 0;
+                    return new Date(year, mIdx, day, hr, min, sec);
+                }
+            }
+            const parsed = new Date(trimmed);
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+        }
+
         // Parse watermark DateTime string + baseSeconds + photo index into uniform filename timestamp: YYYYMMDD_HHMMSS
         function buildUniformFilename(item, indexInBatch) {
             const s = item.settings;
 
             // Parse date from s.dateTime (e.g., "Oct 16, 2026 13:27")
-            let parsedDate = new Date(s.dateTime);
-            if (isNaN(parsedDate.getTime())) {
-                parsedDate = new Date();
-            }
+            let parsedDate = parseWatermarkDate(s.dateTime);
 
             // Base seconds from input (0-59)
             let baseSec = parseInt(s.baseSeconds, 10);
@@ -538,9 +618,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
             parsedDate.setSeconds(baseSec);
 
             // Increment timestamp by +indexInBatch seconds so every file in batch has a unique timestamp
-            if (toggleAutoIncrementFilename.checked) {
-                parsedDate = new Date(parsedDate.getTime() + indexInBatch * 1000);
-            }
+            parsedDate = new Date(parsedDate.getTime() + indexInBatch * 1000);
 
             const yyyy = parsedDate.getFullYear();
             const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
@@ -666,9 +744,6 @@ Talo-Ot, Cebu, 6021, Central Visayas
             inputCoords.value = s.coords;
             inputPhotoCode.value = s.photoCode;
             toggleTopPills.checked = s.showTopPills;
-            toggleBottomCode.checked = s.showBottomCode;
-            toggleRightVertical.checked = s.showRightVertical;
-            toggleLogo.checked = s.showLogo;
             inputScale.value = s.scale;
             inputShadow.value = s.shadow;
             scaleValueLabel.textContent = `${s.scale}%`;
@@ -676,8 +751,19 @@ Talo-Ot, Cebu, 6021, Central Visayas
 
             activeResolution.textContent = `(${item.width}×${item.height})`;
             batchCountBadge.textContent = batchItems.length;
+            const mobileBadge = document.getElementById('mobileBatchCountBadge');
+            if (mobileBadge) mobileBadge.textContent = batchItems.length;
             queueCounterText.textContent = `${activeIndex + 1}/${batchItems.length}`;
             liveFilenamePreview.textContent = buildUniformFilename(item, activeIndex);
+
+            // Toggle on-canvas prev/next navigation buttons
+            const prevBtn = document.getElementById('prevPhotoBtn');
+            const nextBtn = document.getElementById('nextPhotoBtn');
+            if (prevBtn && nextBtn) {
+                const showNav = batchItems.length > 1;
+                prevBtn.classList.toggle('hidden', !showNav);
+                nextBtn.classList.toggle('hidden', !showNav);
+            }
         }
 
         // Update Settings when User Types in Form
@@ -695,28 +781,32 @@ Talo-Ot, Cebu, 6021, Central Visayas
             current.coords = inputCoords.value;
             current.photoCode = inputPhotoCode.value.toUpperCase();
             current.showTopPills = toggleTopPills.checked;
-            current.showBottomCode = toggleBottomCode.checked;
-            current.showRightVertical = toggleRightVertical.checked;
-            current.showLogo = toggleLogo.checked;
+            current.showBottomCode = true;
+            current.showRightVertical = true;
+            current.showLogo = true;
             current.scale = parseInt(inputScale.value, 10) || 100;
             current.shadow = parseInt(inputShadow.value, 10) || 50;
 
-            // Propagate shared template fields across all uploaded photos in the batch (preserving unique Photo Codes)
+            // Propagate only the edited shared template field across all uploaded photos in the batch
+            // (preserving unique Photo Codes AND preserving per-photo staggered dateTimes unless dateTime itself was edited)
             if (changedElement !== inputPhotoCode) {
                 batchItems.forEach((item, idx) => {
                     if (idx !== activeIndex) {
-                        item.settings.title = current.title;
-                        item.settings.dateTime = current.dateTime;
-                        item.settings.baseSeconds = current.baseSeconds;
-                        item.settings.address = current.address;
-                        item.settings.altitude = current.altitude;
-                        item.settings.coords = current.coords;
-                        item.settings.showTopPills = current.showTopPills;
-                        item.settings.showBottomCode = current.showBottomCode;
-                        item.settings.showRightVertical = current.showRightVertical;
-                        item.settings.showLogo = current.showLogo;
-                        item.settings.scale = current.scale;
-                        item.settings.shadow = current.shadow;
+                        if (!changedElement || changedElement === inputTitle) item.settings.title = current.title;
+                        if (!changedElement || changedElement === inputDateTime) item.settings.dateTime = current.dateTime;
+                        if (!changedElement || changedElement === inputBaseSeconds) item.settings.baseSeconds = current.baseSeconds;
+                        if (!changedElement || changedElement === inputAddress) item.settings.address = current.address;
+                        if (!changedElement || changedElement === inputAltitude) item.settings.altitude = current.altitude;
+                        if (!changedElement || changedElement === inputCoords) item.settings.coords = current.coords;
+                        if (!changedElement || changedElement === toggleTopPills) item.settings.showTopPills = current.showTopPills;
+                        item.settings.showBottomCode = true;
+                        item.settings.showRightVertical = true;
+                        item.settings.showLogo = true;
+                        if (!changedElement || changedElement === inputScale) {
+                            item.settings.scale = current.scale;
+                            item.settings.shadow = current.shadow;
+                        }
+                        if (!changedElement || changedElement === inputShadow) item.settings.shadow = current.shadow;
                     }
                 });
             }
@@ -844,7 +934,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
                     currentX += pill1W + 22 * u;
                 }
 
-                // Pill 2: GPS Coordinates
+                // Pill 2: GPS Coordinates (wraps to second row if it exceeds canvas width)
                 if (s.coords && s.coords.trim() !== '') {
                     const coordText = s.coords.trim();
                     const textMetrics = tCtx.measureText(coordText);
@@ -852,15 +942,22 @@ Talo-Ot, Cebu, 6021, Central Visayas
                     const padRight = 20 * u;
                     const pill2W = iconSpace + textMetrics.width + padRight;
 
+                    let pill2X = currentX;
+                    let pill2Y = topY;
+                    if (pill2X > 20 * u && pill2X + pill2W > W - 20 * u) {
+                        pill2X = 20 * u;
+                        pill2Y = topY + pillH + 12 * u;
+                    }
+
                     tCtx.save();
                     clearShadow();
                     tCtx.fillStyle = 'rgba(42, 48, 54, 0.62)';
                     tCtx.beginPath();
-                    tCtx.roundRect(currentX, topY, pill2W, pillH, pillRadius);
+                    tCtx.roundRect(pill2X, pill2Y, pill2W, pillH, pillRadius);
                     tCtx.fill();
 
-                    const pinX = currentX + 27 * u;
-                    const pinY = topY + pillH / 2 - 3 * u;
+                    const pinX = pill2X + 27 * u;
+                    const pinY = pill2Y + pillH / 2 - 3 * u;
                     const pinR = 9.5 * u;
 
                     tCtx.fillStyle = '#ffffff';
@@ -877,7 +974,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
                     tCtx.fill();
 
                     tCtx.fillStyle = '#ffffff';
-                    tCtx.fillText(coordText, currentX + iconSpace + 2 * u, topY + pillH / 2 + 1 * u);
+                    tCtx.fillText(coordText, pill2X + iconSpace + 2 * u, pill2Y + pillH / 2 + 1 * u);
                     tCtx.restore();
                 }
             }
@@ -1059,8 +1156,10 @@ Talo-Ot, Cebu, 6021, Central Visayas
 
                 if (batchItems.length > 1) {
                     const delBtn = document.createElement('button');
-                    delBtn.className = 'absolute top-0.5 right-0.5 bg-rose-600/90 text-white rounded-full p-0.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition';
-                    delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+                    delBtn.type = 'button';
+                    delBtn.setAttribute('aria-label', `Remove photo ${index + 1}`);
+                    delBtn.className = 'absolute top-0 right-0 w-6 h-6 bg-rose-600/95 text-white rounded-bl-lg flex items-center justify-center opacity-95 sm:opacity-0 group-hover:opacity-100 transition shadow';
+                    delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
                         batchItems.splice(index, 1);
@@ -1082,11 +1181,13 @@ Talo-Ot, Cebu, 6021, Central Visayas
                 thumbnailStrip.appendChild(btn);
             });
             batchCountBadge.textContent = batchItems.length;
+            const mobileBadge = document.getElementById('mobileBatchCountBadge');
+            if (mobileBadge) mobileBadge.textContent = batchItems.length;
             queueCounterText.textContent = `${activeIndex + 1}/${batchItems.length}`;
         }
 
-        // Handle Batch Photo Upload — Automatically generates unique 14-char Photo Code for every uploaded photo
-        function handleFiles(files) {
+        // Handle Batch Photo Upload — Preserves deterministic file order & user toggle settings
+        async function handleFiles(files) {
             const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
             if (validFiles.length === 0) return;
 
@@ -1094,23 +1195,17 @@ Talo-Ot, Cebu, 6021, Central Visayas
                 ? { ...batchItems[activeIndex].settings }
                 : { ...DEFAULT_SETTINGS };
 
-            if (batchItems.length === 1 && batchItems[0].id === 'sample-1') {
-                batchItems = [];
-            }
-
-            let loadedCount = 0;
-            validFiles.forEach((file) => {
+            const loadSingleFile = (file, idx) => new Promise((resolve) => {
                 const reader = new FileReader();
+                reader.onerror = () => resolve(null);
                 reader.onload = (e) => {
                     const img = new Image();
+                    img.onerror = () => resolve(null);
                     img.onload = () => {
-                        // Automatically generate a unique 14-char Photo Code for each photo
-                        const autoCode = toggleAutoUniqueCode.checked
-                            ? generateRandomPhotoCode()
-                            : currentTemplate.photoCode;
+                        const autoCode = generateRandomPhotoCode();
 
-                        batchItems.push({
-                            id: 'img-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+                        resolve({
+                            id: 'img-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).substring(2, 7),
                             name: file.name,
                             image: img,
                             width: img.width,
@@ -1119,70 +1214,267 @@ Talo-Ot, Cebu, 6021, Central Visayas
                             settings: {
                                 ...currentTemplate,
                                 photoCode: autoCode,
-                                showTopPills: true,
+                                showTopPills: toggleTopPills.checked,
                                 showBottomCode: true,
                                 showRightVertical: true,
                                 showLogo: true
                             }
                         });
-                        loadedCount++;
-                        if (loadedCount === validFiles.length) {
-                            activeIndex = batchItems.length - validFiles.length;
-                            syncFormFromActiveItem();
-                            renderThumbnails();
-                            renderActiveCanvas();
-                            showToast(`Added ${validFiles.length} photo${validFiles.length > 1 ? 's' : ''} with auto Photo Codes!`);
-                        }
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
+
+            const loadedItems = (await Promise.all(validFiles.map((f, i) => loadSingleFile(f, i)))).filter(Boolean);
+            if (loadedItems.length === 0) {
+                showToast('Could not load selected image files');
+                return;
+            }
+
+            if (batchItems.length === 1 && batchItems[0].id === 'sample-1') {
+                batchItems = [];
+            }
+
+            const firstNewIndex = batchItems.length;
+            batchItems.push(...loadedItems);
+            activeIndex = firstNewIndex;
+            syncFormFromActiveItem();
+            renderThumbnails();
+            renderActiveCanvas();
+            showToast(`Added ${loadedItems.length} photo${loadedItems.length > 1 ? 's' : ''} with auto Photo Codes!`);
         }
 
-        // File Input & Drag-and-Drop Listeners
+        // File Input, Mobile Camera Input & Drag-and-Drop Listeners
         fileInput.addEventListener('change', (e) => {
             handleFiles(e.target.files);
             fileInput.value = '';
         });
 
+        const cameraInput = document.getElementById('cameraInput');
+        if (cameraInput) {
+            cameraInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+                cameraInput.value = '';
+            });
+        }
+
         const dropZoneOverlay = document.getElementById('dropZoneOverlay');
-        window.addEventListener('dragover', (e) => {
+        let dragCounter = 0;
+        window.addEventListener('dragenter', (e) => {
             e.preventDefault();
+            dragCounter++;
             dropZoneOverlay.classList.remove('hidden');
         });
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
         window.addEventListener('dragleave', (e) => {
-            if (e.relatedTarget === null) dropZoneOverlay.classList.add('hidden');
+            e.preventDefault();
+            dragCounter = Math.max(0, dragCounter - 1);
+            if (dragCounter === 0) {
+                dropZoneOverlay.classList.add('hidden');
+            }
         });
         window.addEventListener('drop', (e) => {
             e.preventDefault();
+            dragCounter = 0;
             dropZoneOverlay.classList.add('hidden');
             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 handleFiles(e.dataTransfer.files);
             }
         });
 
-        // Mobile Expand/Collapse Preview Toggle
-        document.getElementById('togglePreviewHeightBtn').addEventListener('click', () => {
-            const panel = document.getElementById('previewPanel');
+        // Mobile Expand/Collapse Preview Toggle & Soft-Keyboard Auto-Compact Mode
+        const previewPanel = document.getElementById('previewPanel');
+        const filmstripBar = document.getElementById('filmstripBar');
+        const doneEditingMobileBtn = document.getElementById('doneEditingMobileBtn');
+
+        function setMobilePreviewSize(mode) {
             const label = document.getElementById('previewSizeLabel');
-            isPreviewExpandedMobile = !isPreviewExpandedMobile;
-            if (isPreviewExpandedMobile) {
-                panel.classList.replace('h-[42dvh]', 'h-[68dvh]');
-                label.textContent = 'Compact';
+            previewPanel.classList.remove('h-[14dvh]', 'h-[36dvh]', 'h-[64dvh]');
+            if (mode === 'keyboard') {
+                previewPanel.classList.add('h-[14dvh]');
+                filmstripBar.classList.add('hidden');
+                doneEditingMobileBtn.classList.remove('hidden');
+                doneEditingMobileBtn.classList.add('flex');
+            } else if (mode === 'expanded') {
+                isPreviewExpandedMobile = true;
+                previewPanel.classList.add('h-[64dvh]');
+                filmstripBar.classList.remove('hidden');
+                doneEditingMobileBtn.classList.add('hidden');
+                doneEditingMobileBtn.classList.remove('flex');
+                if (label) label.textContent = 'Split View';
             } else {
-                panel.classList.replace('h-[68dvh]', 'h-[42dvh]');
-                label.textContent = 'Expand';
+                isPreviewExpandedMobile = false;
+                previewPanel.classList.add('h-[36dvh]');
+                filmstripBar.classList.remove('hidden');
+                doneEditingMobileBtn.classList.add('hidden');
+                doneEditingMobileBtn.classList.remove('flex');
+                if (label) label.textContent = 'Large Preview';
             }
+        }
+
+        document.getElementById('togglePreviewHeightBtn').addEventListener('click', () => {
+            if (isPreviewExpandedMobile) {
+                setMobilePreviewSize('normal');
+            } else {
+                setMobilePreviewSize('expanded');
+            }
+        });
+
+        // Automatically give form maximum height on mobile when typing in text inputs
+        const textInputs = [inputTitle, inputDateTime, inputBaseSeconds, inputAddress, inputAltitude, inputCoords, inputPhotoCode];
+        textInputs.forEach(inp => {
+            inp.addEventListener('focus', () => {
+                if (window.innerWidth < 1024) {
+                    setMobilePreviewSize('keyboard');
+                    setTimeout(() => inp.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+                }
+            });
+            inp.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (window.innerWidth < 1024 && !textInputs.includes(document.activeElement)) {
+                        setMobilePreviewSize(isPreviewExpandedMobile ? 'expanded' : 'normal');
+                    }
+                }, 150);
+            });
+        });
+
+        doneEditingMobileBtn.addEventListener('click', () => {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            setMobilePreviewSize(isPreviewExpandedMobile ? 'expanded' : 'normal');
+        });
+
+        // Step Previous / Next Photo in Batch Queue
+        function stepActivePhoto(delta) {
+            if (batchItems.length <= 1) return;
+            activeIndex = (activeIndex + delta + batchItems.length) % batchItems.length;
+            syncFormFromActiveItem();
+            renderThumbnails();
+            renderActiveCanvas();
+            const activeThumb = thumbnailStrip.children[activeIndex];
+            if (activeThumb) {
+                activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        }
+
+        document.getElementById('prevPhotoBtn').addEventListener('click', () => stepActivePhoto(-1));
+        document.getElementById('nextPhotoBtn').addEventListener('click', () => stepActivePhoto(1));
+
+        // Touch Swipe Left / Right Gesture on Canvas Viewport
+        const canvasContainer = document.getElementById('canvasContainer');
+        let touchStartX = 0;
+        let touchStartY = 0;
+        canvasContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        canvasContainer.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1 && batchItems.length > 1) {
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+                    if (dx < 0) stepActivePhoto(1);
+                    else stepActivePhoto(-1);
+                }
+            }
+        }, { passive: true });
+
+        // Copy Standardized Filename Button
+        document.getElementById('copyFilenameBtn').addEventListener('click', async () => {
+            const filename = liveFilenamePreview.textContent;
+            try {
+                await navigator.clipboard.writeText(filename);
+                showToast('Copied filename to clipboard!');
+            } catch {
+                showToast(filename);
+            }
+        });
+
+        // One-Tap Live Phone GPS Coordinates & Altitude
+        document.getElementById('useGpsBtn').addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                showToast('GPS not supported by this browser');
+                return;
+            }
+            const gpsBtn = document.getElementById('useGpsBtn');
+            const origHTML = gpsBtn.innerHTML;
+            gpsBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Locating...</span>';
+            lucide.createIcons();
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const latDir = lat >= 0 ? 'N' : 'S';
+                    const lonDir = lon >= 0 ? 'E' : 'W';
+                    inputCoords.value = `${Math.abs(lat).toFixed(6)}°${latDir}, ${Math.abs(lon).toFixed(6)}°${lonDir}`;
+
+                    if (pos.coords.altitude !== null && !isNaN(pos.coords.altitude)) {
+                        inputAltitude.value = `${pos.coords.altitude.toFixed(1)} m`;
+                        updateSettingsFromForm(inputAltitude);
+                    }
+                    updateSettingsFromForm(inputCoords);
+                    gpsBtn.innerHTML = origHTML;
+                    lucide.createIcons();
+                    showToast('Updated GPS Coordinates from phone!');
+                },
+                (err) => {
+                    gpsBtn.innerHTML = origHTML;
+                    lucide.createIcons();
+                    showToast('Could not read GPS: ' + (err.message || 'Permission denied'));
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+        // Fullscreen HD Zoom Inspector Modal
+        const zoomModal = document.getElementById('zoomModal');
+        const zoomModalImg = document.getElementById('zoomModalImg');
+        const zoomLevelText = document.getElementById('zoomLevelText');
+        const zoomModalCounter = document.getElementById('zoomModalCounter');
+        let isZoomed2x = false;
+
+        function openZoomInspector() {
+            if (!batchItems[activeIndex]) return;
+            renderActiveCanvas();
+            zoomModalImg.src = previewCanvas.toDataURL('image/jpeg', 0.95);
+            zoomModalCounter.textContent = `${activeIndex + 1}/${batchItems.length}`;
+            isZoomed2x = false;
+            zoomModalImg.className = 'max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-150';
+            zoomLevelText.textContent = '2× Zoom';
+            zoomModal.classList.remove('hidden');
+        }
+
+        document.getElementById('openZoomModalBtn').addEventListener('click', openZoomInspector);
+        previewCanvas.addEventListener('click', openZoomInspector);
+
+        document.getElementById('toggleZoomLevelBtn').addEventListener('click', () => {
+            isZoomed2x = !isZoomed2x;
+            if (isZoomed2x) {
+                zoomModalImg.className = 'w-[185vw] sm:w-[140vw] max-w-none h-auto rounded-lg shadow-2xl transition-all duration-150';
+                zoomLevelText.textContent = 'Fit Screen';
+            } else {
+                zoomModalImg.className = 'max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-150';
+                zoomLevelText.textContent = '2× Zoom';
+            }
+        });
+
+        document.getElementById('closeZoomModalBtn').addEventListener('click', () => {
+            zoomModal.classList.add('hidden');
         });
 
         // Live Form Listeners
         [
             inputTitle, inputDateTime, inputBaseSeconds, inputAddress,
             inputAltitude, inputCoords, inputPhotoCode,
-            toggleTopPills, toggleAutoUniqueCode, toggleAutoIncrementFilename,
-            toggleBottomCode, toggleRightVertical, toggleLogo,
-            inputScale, inputShadow
+            toggleTopPills, inputScale, inputShadow
         ].forEach(el => {
             el.addEventListener('input', () => updateSettingsFromForm(el));
             el.addEventListener('change', () => updateSettingsFromForm(el));
@@ -1194,6 +1486,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
             inputDateTime.value = formatTimemarkDisplayDate(now);
             inputBaseSeconds.value = String(now.getSeconds()).padStart(2, '0');
             updateSettingsFromForm(inputDateTime);
+            updateSettingsFromForm(inputBaseSeconds);
             showToast('Updated to current Date & Time');
         });
 
@@ -1217,8 +1510,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
         // Stagger Display Minutes (+1m per photo)
         document.getElementById('staggerMinutesBtn').addEventListener('click', () => {
             if (!batchItems[activeIndex]) return;
-            const parsed = new Date(batchItems[activeIndex].settings.dateTime);
-            const startTime = isNaN(parsed.getTime()) ? new Date() : parsed;
+            const startTime = parseWatermarkDate(batchItems[activeIndex].settings.dateTime);
 
             batchItems.forEach((item, idx) => {
                 const staggered = new Date(startTime.getTime() + idx * 60000);
@@ -1227,22 +1519,6 @@ Talo-Ot, Cebu, 6021, Central Visayas
             syncFormFromActiveItem();
             renderActiveCanvas();
             showToast('Staggered watermark display times (+1 min each)');
-        });
-
-        // Sync Current Settings to All Photos (keeping each photo's unique Photo Code)
-        document.getElementById('applyToAllBtn').addEventListener('click', () => {
-            if (!batchItems[activeIndex]) return;
-            const master = { ...batchItems[activeIndex].settings };
-            batchItems.forEach(item => {
-                const existingCode = toggleAutoUniqueCode.checked ? item.settings.photoCode : master.photoCode;
-                item.settings = {
-                    ...master,
-                    photoCode: existingCode
-                };
-            });
-            syncFormFromActiveItem();
-            renderActiveCanvas();
-            showToast(`Applied template to all ${batchItems.length} photos!`);
         });
 
         // Reset Scale
@@ -1267,7 +1543,7 @@ Talo-Ot, Cebu, 6021, Central Visayas
             const qualitySteps = [0.92, 0.85, 0.78, 0.70, 0.60, 0.50, 0.40, 0.30];
             for (const q of qualitySteps) {
                 const blob = await new Promise(resolve => sourceCanvas.toBlob(resolve, 'image/jpeg', q));
-                if (blob.size <= maxBytes) {
+                if (blob && blob.size <= maxBytes) {
                     return { blob, quality: q, scale: 100, originalSize: null };
                 }
             }
@@ -1275,30 +1551,33 @@ Talo-Ot, Cebu, 6021, Central Visayas
             // Phase 2: Quality alone isn't enough — downscale the image
             // Start from 90% resolution down to 30%, each time with quality 0.50
             const scaleSteps = [0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30];
-            for (const scaleFactor of scaleSteps) {
-                const scaledCanvas = document.createElement('canvas');
-                scaledCanvas.width = Math.round(sourceCanvas.width * scaleFactor);
-                scaledCanvas.height = Math.round(sourceCanvas.height * scaleFactor);
-                const sCtx = scaledCanvas.getContext('2d');
-                sCtx.drawImage(sourceCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+            const scaledCanvas = document.createElement('canvas');
+            const sCtx = scaledCanvas.getContext('2d');
+            try {
+                for (const scaleFactor of scaleSteps) {
+                    scaledCanvas.width = Math.max(1, Math.round(sourceCanvas.width * scaleFactor));
+                    scaledCanvas.height = Math.max(1, Math.round(sourceCanvas.height * scaleFactor));
+                    sCtx.drawImage(sourceCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
-                // Try a couple of qualities on the scaled canvas
-                for (const q of [0.65, 0.50, 0.35]) {
-                    const blob = await new Promise(resolve => scaledCanvas.toBlob(resolve, 'image/jpeg', q));
-                    if (blob.size <= maxBytes) {
-                        return { blob, quality: q, scale: Math.round(scaleFactor * 100), originalSize: null };
+                    // Try a couple of qualities on the scaled canvas
+                    for (const q of [0.65, 0.50, 0.35]) {
+                        const blob = await new Promise(resolve => scaledCanvas.toBlob(resolve, 'image/jpeg', q));
+                        if (blob && blob.size <= maxBytes) {
+                            return { blob, quality: q, scale: Math.round(scaleFactor * 100), originalSize: null };
+                        }
                     }
                 }
-            }
 
-            // Fallback: Return the smallest we could get (30% scale, 0.35 quality)
-            const fallbackCanvas = document.createElement('canvas');
-            fallbackCanvas.width = Math.round(sourceCanvas.width * 0.25);
-            fallbackCanvas.height = Math.round(sourceCanvas.height * 0.25);
-            const fCtx = fallbackCanvas.getContext('2d');
-            fCtx.drawImage(sourceCanvas, 0, 0, fallbackCanvas.width, fallbackCanvas.height);
-            const blob = await new Promise(resolve => fallbackCanvas.toBlob(resolve, 'image/jpeg', 0.30));
-            return { blob, quality: 0.30, scale: 25, originalSize: null };
+                // Fallback: Return the smallest we could get (25% scale, 0.30 quality)
+                scaledCanvas.width = Math.max(1, Math.round(sourceCanvas.width * 0.25));
+                scaledCanvas.height = Math.max(1, Math.round(sourceCanvas.height * 0.25));
+                sCtx.drawImage(sourceCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                const blob = await new Promise(resolve => scaledCanvas.toBlob(resolve, 'image/jpeg', 0.30));
+                return { blob, quality: 0.30, scale: 25, originalSize: null };
+            } finally {
+                scaledCanvas.width = 0;
+                scaledCanvas.height = 0;
+            }
         }
 
         // Helper: Get blob from canvas, optionally compressed to fit size limit
@@ -1324,18 +1603,22 @@ Talo-Ot, Cebu, 6021, Central Visayas
             setTimeout(() => URL.revokeObjectURL(url), 3000);
         }
 
-        // Save Current Single Photo
-        document.getElementById('downloadCurrentBtn').addEventListener('click', async () => {
+        // Save Current Single Photo (Used by Desktop Header, Mobile Bottom Bar, and Zoom Inspector)
+        async function saveCurrentSinglePhoto() {
             if (!batchItems[activeIndex]) return;
             const item = batchItems[activeIndex];
             renderActiveCanvas();
             const outFilename = buildUniformFilename(item, activeIndex);
 
             const blob = await getExportBlob(previewCanvas);
-            const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+            const sizeKB = Math.round(blob.size / 1024);
             triggerBlobDownload(blob, outFilename);
-            showToast(`Saved: ${outFilename} (${sizeMB} MB)`);
-        });
+            showToast(`Saved: ${outFilename} (${sizeKB} KB)`);
+        }
+
+        document.getElementById('downloadCurrentBtn').addEventListener('click', saveCurrentSinglePhoto);
+        document.getElementById('mobileBottomSaveSingleBtn').addEventListener('click', saveCurrentSinglePhoto);
+        document.getElementById('zoomModalShareBtn').addEventListener('click', saveCurrentSinglePhoto);
 
         // Mobile Native Share / Save to Gallery
         mobileShareBtn.addEventListener('click', async () => {
@@ -1360,19 +1643,24 @@ Talo-Ot, Cebu, 6021, Central Visayas
             }
         });
 
-        // Sequential One-by-One Multi-Photo Export (Instead of ZIP)
-        document.getElementById('exportAllPhotosBtn').addEventListener('click', async () => {
+        // Sequential One-by-One Multi-Photo Export (Used by Desktop & Mobile Bottom CTA)
+        async function exportAllPhotosSequential() {
             if (batchItems.length === 0) return;
 
-            const btn = document.getElementById('exportAllPhotosBtn');
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
+            const desktopBtn = document.getElementById('exportAllPhotosBtn');
+            const mobileBtn = document.getElementById('mobileBottomExportAllBtn');
+            const mobileSubtext = document.getElementById('mobileExportSubtext');
+            const originalDesktopHTML = desktopBtn.innerHTML;
+            desktopBtn.disabled = true;
+            if (mobileBtn) mobileBtn.disabled = true;
 
             const offscreenCanvas = document.createElement('canvas');
 
             try {
                 for (let i = 0; i < batchItems.length; i++) {
-                    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Saving ${i + 1}/${batchItems.length}...</span>`;
+                    const progressLabel = `Saving ${i + 1}/${batchItems.length}...`;
+                    desktopBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>${progressLabel}</span>`;
+                    if (mobileSubtext) mobileSubtext.textContent = progressLabel;
                     lucide.createIcons();
 
                     const item = batchItems[i];
@@ -1383,21 +1671,28 @@ Talo-Ot, Cebu, 6021, Central Visayas
 
                     triggerBlobDownload(blob, filename);
 
-                    // 380ms pause between sequential downloads so mobile browsers allow all files through smoothly
+                    // 400ms pause between sequential downloads so mobile browsers allow all files through smoothly
                     if (i < batchItems.length - 1) {
-                        await new Promise(r => setTimeout(r, 380));
+                        await new Promise(r => setTimeout(r, 400));
                     }
                 }
-                showToast(`Exported all ${batchItems.length} photos one-by-one!`);
+                showToast(`Exported all ${batchItems.length} photo${batchItems.length > 1 ? 's' : ''}!`);
             } catch (err) {
                 console.error(err);
                 showToast('Error exporting photos');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
+                offscreenCanvas.width = 0;
+                offscreenCanvas.height = 0;
+                desktopBtn.disabled = false;
+                if (mobileBtn) mobileBtn.disabled = false;
+                desktopBtn.innerHTML = originalDesktopHTML;
+                if (mobileSubtext) mobileSubtext.textContent = 'All Photos';
                 lucide.createIcons();
             }
-        });
+        }
+
+        document.getElementById('exportAllPhotosBtn').addEventListener('click', exportAllPhotosSequential);
+        document.getElementById('mobileBottomExportAllBtn').addEventListener('click', exportAllPhotosSequential);
 
         // Wait for fonts to load before initial render
         document.fonts.ready.then(() => {
